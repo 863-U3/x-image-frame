@@ -79,8 +79,10 @@
           <section class="panel" data-open="true">
             <button class="panel__header"><span class="panel__title">トリミング</span><svg class="panel__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
             <div class="panel__body">
+              <label class="slider"><span>拡大</span><input type="range" id="zoom" min="100" max="300" value="100"><span class="slider__val" id="zoomVal">100%</span></label>
               <label class="slider"><span>横</span><input type="range" id="cropX" min="0" max="100" value="50"><span class="slider__val" id="cropXVal">50</span></label>
               <label class="slider"><span>縦</span><input type="range" id="cropY" min="0" max="100" value="50"><span class="slider__val" id="cropYVal">50</span></label>
+              <p class="drag-hint">プレビュー上でドラッグ＆ホイールで操作可</p>
             </div>
           </section>
 

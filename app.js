@@ -5,7 +5,7 @@ const state = {
   img: null,
   exif: {},
   ratio: { w: 3, h: 4, pw: 900, ph: 1200 },
-  cropX: 50, cropY: 50,
+  cropX: 50, cropY: 50, zoom: 100,
   frameColor: '#ffffff',
   framePadding: 40, barHeight: 80,
   textColor: '#333333',
@@ -189,9 +189,39 @@ $$('.preset').forEach(btn => btn.addEventListener('click', () => {
   state.ratio = { w:rw, h:rh, pw:+btn.dataset.w, ph:+btn.dataset.h }; render();
 }));
 
-// ---- Crop ----
+// ---- Crop & Zoom ----
+$('#zoom').addEventListener('input', e => { state.zoom = +e.target.value; $('#zoomVal').textContent = e.target.value + '%'; render(); });
 $('#cropX').addEventListener('input', e => { state.cropX = +e.target.value; $('#cropXVal').textContent = e.target.value; render(); });
 $('#cropY').addEventListener('input', e => { state.cropY = +e.target.value; $('#cropYVal').textContent = e.target.value; render(); });
+
+// ---- Mouse Drag on Preview ----
+{
+  const canvas = $('#previewCanvas');
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; e.preventDefault(); });
+  window.addEventListener('mousemove', e => {
+    if (!dragging || !state.img) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    const sensitivity = 0.3;
+    state.cropX = Math.max(0, Math.min(100, state.cropX - dx * sensitivity));
+    state.cropY = Math.max(0, Math.min(100, state.cropY - dy * sensitivity));
+    $('#cropX').value = state.cropX; $('#cropXVal').textContent = Math.round(state.cropX);
+    $('#cropY').value = state.cropY; $('#cropYVal').textContent = Math.round(state.cropY);
+    render();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // ---- Mouse Wheel Zoom ----
+  canvas.addEventListener('wheel', e => {
+    if (!state.img) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -5 : 5;
+    state.zoom = Math.max(100, Math.min(300, state.zoom + delta));
+    $('#zoom').value = state.zoom; $('#zoomVal').textContent = state.zoom + '%';
+    render();
+  }, { passive: false });
+}
 
 // ---- Frame ----
 $$('.swatch').forEach(btn => btn.addEventListener('click', () => {
@@ -293,9 +323,12 @@ function _render() {
   ctx.fillStyle = state.frameColor; ctx.fillRect(0, 0, W, H);
 
   const src = state.img, srcAR = src.width/src.height, dstAR = pw/ph;
-  let sx,sy,sw,sh;
-  if (srcAR > dstAR) { sh = src.height; sw = sh*dstAR; sy = 0; sx = (src.width-sw)*(state.cropX/100); }
-  else { sw = src.width; sh = sw/dstAR; sx = 0; sy = (src.height-sh)*(state.cropY/100); }
+  const zf = 100 / state.zoom;
+  let sw, sh;
+  if (srcAR > dstAR) { sh = src.height * zf; sw = sh * dstAR; }
+  else { sw = src.width * zf; sh = sw / dstAR; }
+  const sx = (src.width - sw) * (state.cropX / 100);
+  const sy = (src.height - sh) * (state.cropY / 100);
   ctx.drawImage(src, sx, sy, sw, sh, pad, pad, pw, ph);
 
   if (state.logo && (state.logoPos==='photo-br'||state.logoPos==='photo-bl')) drawLogo(ctx, pad, pad, pw, ph);
@@ -395,10 +428,10 @@ function renderToBlob(forceMime) {
     const { pw,ph } = state.ratio, pad = state.framePadding, bar = state.barHeight;
     const W = pw+pad*2, H = ph+pad*2+bar; c.width = W; c.height = H;
     ctx.fillStyle = state.frameColor; ctx.fillRect(0,0,W,H);
-    const src = state.img, srcAR = src.width/src.height, dstAR = pw/ph;
-    let sx,sy,sw,sh;
-    if (srcAR>dstAR){sh=src.height;sw=sh*dstAR;sy=0;sx=(src.width-sw)*(state.cropX/100);}
-    else{sw=src.width;sh=sw/dstAR;sx=0;sy=(src.height-sh)*(state.cropY/100);}
+    const src=state.img,srcAR=src.width/src.height,dstAR=pw/ph,zf=100/state.zoom;
+    let sw,sh;
+    if(srcAR>dstAR){sh=src.height*zf;sw=sh*dstAR;}else{sw=src.width*zf;sh=sw/dstAR;}
+    const sx=(src.width-sw)*(state.cropX/100),sy=(src.height-sh)*(state.cropY/100);
     ctx.drawImage(src,sx,sy,sw,sh,pad,pad,pw,ph);
     if(state.logo&&(state.logoPos==='photo-br'||state.logoPos==='photo-bl')){const ar=state.logo.width/state.logo.height,lh=state.logoSize,lw=lh*ar,m=12;const lx=state.logoPos.includes('right')?pad+pw-lw-m:pad+m;ctx.save();ctx.globalAlpha=state.logoOpacity;ctx.drawImage(state.logo,lx,pad+ph-lh-m,lw,lh);ctx.restore();}
     const barY=pad+ph+pad,e=state.exif,line1=[e.camera,e.lens].filter(Boolean).join('   '),line2=[e.focal,e.fNumber,e.shutter,e.iso].filter(Boolean).join('  ');

@@ -152,7 +152,9 @@ main { max-width: 1600px; margin: 0 auto; padding: 16px 20px; }
   max-height: 75vh;
   border-radius: 2px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  cursor: grab;
 }
+.preview__wrapper canvas:active { cursor: grabbing; }
 
 /* Quick Actions */
 .preview__actions {
@@ -300,6 +302,13 @@ main { max-width: 1600px; margin: 0 auto; padding: 16px 20px; }
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text3);
+}
+
+.drag-hint {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 6px;
+  text-align: center;
 }
 
 /* Color swatches */
