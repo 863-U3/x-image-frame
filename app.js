@@ -155,7 +155,9 @@ async function readExif(file) {
       try { data = await exifr.parse(file); } catch(_) {}
     }
     if (!data) return;
-    const camera = [data.Make, data.Model].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+    const make = (data.Make || '').trim();
+    const model = (data.Model || '').trim();
+    const camera = (model && make && model.toLowerCase().startsWith(make.toLowerCase())) ? model : [make, model].filter(Boolean).join(' ').replace(/\s+/g, ' ');
     const lens = data.LensModel || '';
     const focal = data.FocalLengthIn35mmFormat || data.FocalLength;
     const focalStr = focal ? `${Math.round(focal)}mm` : '';
