@@ -13,7 +13,7 @@ const state = {
   comment: '',
   logo: null, logoPos: 'bar-right', logoSize: 60, logoOpacity: 0.8,
   exportFormat: 'jpeg', jpegQuality: 0.92,
-  letterSpacing: 0, lineSpacing: 6, fontScale: 100, textAlign: 'center', textVAlign: 'middle', textOffsetY: 0,
+  letterSpacing: 0, lineSpacing: 6, fontScaleTitle: 100, fontScaleDetail: 100, textAlign: 'center', textVAlign: 'middle', textOffsetY: 0,
 };
 
 function toast(msg) {
@@ -208,7 +208,8 @@ function autoTextColor() {
 $('#textColor').addEventListener('input', e => { state.textColor = e.target.value; render(); });
 
 // ---- Letter Spacing ----
-$('#fontScale').addEventListener('input', e => { state.fontScale = +e.target.value; $('#fontScaleVal').textContent = e.target.value + '%'; render(); });
+$('#fontScaleTitle').addEventListener('input', e => { state.fontScaleTitle = +e.target.value; $('#fontScaleTitleVal').textContent = e.target.value + '%'; render(); });
+$('#fontScaleDetail').addEventListener('input', e => { state.fontScaleDetail = +e.target.value; $('#fontScaleDetailVal').textContent = e.target.value + '%'; render(); });
 $('#letterSpacing').addEventListener('input', e => { state.letterSpacing = +e.target.value; $('#letterSpacingVal').textContent = e.target.value; render(); });
 $('#lineSpacing').addEventListener('input', e => { state.lineSpacing = +e.target.value; $('#lineSpacingVal').textContent = e.target.value; render(); });
 
@@ -300,9 +301,9 @@ function _render() {
   const barY = pad+ph+pad, e = state.exif;
   const line1 = [e.camera, e.lens].filter(Boolean).join('   ');
   const line2 = [e.focal, e.fNumber, e.shutter, e.iso].filter(Boolean).join('  ');
-  const scale = state.fontScale / 100;
-  const s1 = Math.max(14, Math.min(24, pw/40)) * scale, s2 = Math.max(11, Math.min(16, pw/55)) * scale;
-  const sc = Math.max(10,Math.min(14,pw/60)) * scale;
+  const scaleT = state.fontScaleTitle / 100, scaleD = state.fontScaleDetail / 100;
+  const s1 = Math.max(14, Math.min(24, pw/40)) * scaleT, s2 = Math.max(11, Math.min(16, pw/55)) * scaleD;
+  const sc = Math.max(10,Math.min(14,pw/60)) * scaleD;
 
   const fw = state.fontWeight || '400';
   const fwBold = state.fontWeight ? state.fontWeight : '700';
@@ -399,8 +400,8 @@ function renderToBlob(forceMime) {
     ctx.drawImage(src,sx,sy,sw,sh,pad,pad,pw,ph);
     if(state.logo&&(state.logoPos==='photo-br'||state.logoPos==='photo-bl')){const ar=state.logo.width/state.logo.height,lh=state.logoSize,lw=lh*ar,m=12;const lx=state.logoPos.includes('right')?pad+pw-lw-m:pad+m;ctx.save();ctx.globalAlpha=state.logoOpacity;ctx.drawImage(state.logo,lx,pad+ph-lh-m,lw,lh);ctx.restore();}
     const barY=pad+ph+pad,e=state.exif,line1=[e.camera,e.lens].filter(Boolean).join('   '),line2=[e.focal,e.fNumber,e.shutter,e.iso].filter(Boolean).join('  ');
-    const scale=state.fontScale/100;
-    const s1=Math.max(14,Math.min(24,pw/40))*scale,s2=Math.max(11,Math.min(16,pw/55))*scale,sc=Math.max(10,Math.min(14,pw/60))*scale;
+    const scaleT=state.fontScaleTitle/100,scaleD=state.fontScaleDetail/100;
+    const s1=Math.max(14,Math.min(24,pw/40))*scaleT,s2=Math.max(11,Math.min(16,pw/55))*scaleD,sc=Math.max(10,Math.min(14,pw/60))*scaleD;
     const fw=state.fontWeight||'400',fwBold=state.fontWeight?state.fontWeight:'700';
     const textEntries=[];
     if(line1)textEntries.push({text:line1,size:s1,weight:fwBold});
